@@ -86,7 +86,7 @@ class Profits extends KwhGenerated {
     this.profit = this.profit.toFixed(2);
     let targetYear = new Date().getFullYear() + this.years + this.roi;
 
-    return <p>You will have saved ${this.profit} by the year {targetYear}.</p>
+    return <h3>You will have saved ${this.profit} by the year {targetYear}.</h3>
   }
 }
 
