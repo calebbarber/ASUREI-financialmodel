@@ -64,10 +64,10 @@ class Savings extends KwhGenerated {
     }
     
     return (
-      <p>
+      <h4>
         This project will take {this.years} years to ahieve a return,
         i.e. the year {targetYear}.
-      </p>
+      </h4>
     )
   }
 }
@@ -86,7 +86,7 @@ class Profits extends KwhGenerated {
     this.profit = this.profit.toFixed(2);
     let targetYear = new Date().getFullYear() + this.years + this.roi;
 
-    return <h3>You will have saved ${this.profit} by the year {targetYear}.</h3>
+    return <p>You will have saved ${this.profit} by the year {targetYear}.</p>
   }
 }
 
