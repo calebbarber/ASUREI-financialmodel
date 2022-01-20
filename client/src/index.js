@@ -56,10 +56,10 @@ class Savings extends KwhGenerated {
     if (remainder) {
       this.years = Math.floor(this.years);
       return (
-        <p>
+        <h4>
           This project will take {this.years} years and {remainder} months
           to achieve a return, i.e. the year {targetYear}.
-        </p>
+        </h4>
       );
     }
     
