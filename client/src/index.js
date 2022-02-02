@@ -44,7 +44,7 @@ class Savings extends KwhGenerated {
   }
 
   calculate() {
-    this.months = this.cost/(.1115 * this.kwh);
+    this.months = this.cost/(.1115 * this.kwh); /* cost constant subject to change */
     this.months = Math.ceil(this.months);
 
     let remainder = this.months % 12;
@@ -127,6 +127,10 @@ function MyForm() {
       <input type='submit' value='Calculate'/>
     </form>
   );
+}
+
+function ROIProgressForm() {
+    
 }
 
 function CurrentSystemDropdown() {
