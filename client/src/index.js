@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 // import App from './App';
 import reportWebVitals from './reportWebVitals';
+import functionPlot from 'function-plot';
 
 const Header = () => {
   const myStyle = {
@@ -41,6 +42,7 @@ class Savings extends KwhGenerated {
     this.cost = cost;
     this.months = 0;
     this.years = 0;
+    this.data = [];
   }
 
   calculate() {
@@ -90,7 +92,7 @@ class Profits extends KwhGenerated {
   }
 }
 
-function MyForm() {
+function CostForm() {
   const [inputs, setInputs] = useState({});
 
   const handleChange = (event) => {
@@ -101,7 +103,7 @@ function MyForm() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    displayResults(inputs);
+    displayROI(inputs);
   }
 
   return (
@@ -129,6 +131,36 @@ function MyForm() {
   );
 }
 
+function YearlyProgressForm() {
+  const [inputs, setInputs] = useState({});
+
+  const handleChange = (event) => {
+    const name = event.target.name;
+    const value = event.target.value;
+    setInputs(values => ({...values, [name]: value}));
+  }
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    displayYearlyProgress(inputs);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>Enter number of years: 
+        <input
+          type='number'
+          name='years'
+          value={inputs.years || ''}
+          onChange={handleChange}
+          required='required'
+        />
+      </label>
+      <input type='submit' value='Calculate'/>
+    </form>
+  );
+}
+
 function CurrentSystemDropdown() {
   const [mySystem, setMySystem] = useState('default');
 
@@ -145,10 +177,6 @@ function CurrentSystemDropdown() {
       alert('Looks like someone did not read the disclaimer');
     }
   }
-
-  // const DoesntWork = () => {
-  //   return <p><em>* This feature has not been implemented yet</em></p>;
-  // }
 
   return (
     <form onSubmit={handleSubmit}>
@@ -167,19 +195,23 @@ function CurrentSystemDropdown() {
   )
 }
 
-function displayResults(inputs) {
+function displayROI(inputs) {
   const savings = new Savings(inputs.kwh, inputs.cost);
   ReactDOM.render(savings.calculate(), document.getElementById('roi'));
 
-  const profits5 = new Profits(inputs.kwh, 5, savings.years);
-  const profits20 = new Profits(inputs.kwh, 20, savings.years);
-  ReactDOM.render(profits5.calculate(), document.getElementById('profit5'));
-  ReactDOM.render(profits20.calculate(), document.getElementById('profit20'));
+  // const profits5 = new Profits(inputs.kwh, 5, savings.years);
+  // const profits20 = new Profits(inputs.kwh, 20, savings.years);
+  // ReactDOM.render(profits5.calculate(), document.getElementById('profit5'));
+  // ReactDOM.render(profits20.calculate(), document.getElementById('profit20'));
+}
+
+function displayYearlyProgress(inputs) {
+
 }
 
 ReactDOM.render(<H1 />, document.getElementById('h1'));
 ReactDOM.render(<Header />, document.getElementById('head'));
-ReactDOM.render(<MyForm />, document.getElementById('form'));
+ReactDOM.render(<CostForm />, document.getElementById('form'));
 ReactDOM.render(<CurrentSystemH1 />, document.getElementById('currentSystemH1'));
 ReactDOM.render(<CurrentSystemDropdown />, document.getElementById('currentSystemSelect'));
 
