@@ -75,14 +75,31 @@ class Savings extends KwhGenerated {
 }
 
 class Profits extends KwhGenerated {
-  constructor(kwh, years, roi) {
+  constructor(kwh, years, cost) {
     super(kwh);
     this.years = years;
-    this.roi = roi;
-    this.profit = 0;
+    this.cost = cost;
+    this.progress = 0;
   }
 
   calculate() {
+    let yearKwh = this.kwh * 12;
+    this.progress = .1115 * (yearKwh * this.years);
+    this.progress.toFixed(2);
+
+    let result = this.progress - this.cost;
+    if (result < 0) { /* ROI not yet achieved */
+      let diff = this.cost - this.progress;
+      return <p>
+        This project has saved ${this.progress} after {this.years} years\n
+        This project will need to save ${diff} to acheive a Return
+      </p>
+    } else { /* ROI acheived */
+      return <p>This project has saved ${this.progress} after {this.years} years</p>
+    }
+  }
+
+  calculateOld() {
     let yearKwh = this.kwh * 12;
     this.profit = .1115 * (yearKwh * this.years);
     this.profit = this.profit.toFixed(2);
@@ -131,6 +148,36 @@ function CostForm() {
   );
 }
 
+function YearlyProgressForm() {
+  const [inputs, setInputs] = useState({});
+
+  const handleChange = (event) => {
+    const name = event.target.name;
+    const value = event.target.value;
+    setInputs(values => ({...values, [name]: value}));
+  }
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    displayYearlyProgress(inputs);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>Enter number of years:
+        <input
+          type='text'
+          name='kwh'
+          value={inputs.years || ''}
+          onChange={handleChange}
+          required='required'
+        />
+      </label>
+      <input type='submit' value='Calculate'/>
+    </form>
+  );
+}
+
 function CurrentSystemDropdown() {
   const [mySystem, setMySystem] = useState('default');
 
@@ -168,6 +215,7 @@ function CurrentSystemDropdown() {
 function displayROI(inputs) {
   const savings = new Savings(inputs.kwh, inputs.cost);
   ReactDOM.render(savings.calculate(), document.getElementById('roi'));
+  ReactDOM.render(<YearlyProgressForm />, document.getElementById('progressForm'));
 
   // const profits5 = new Profits(inputs.kwh, 5, savings.years);
   // const profits20 = new Profits(inputs.kwh, 20, savings.years);
@@ -176,12 +224,13 @@ function displayROI(inputs) {
 }
 
 function displayYearlyProgress(inputs) {
-
+  const progress = new Profits(kwh, inputs.years, cost); /* trying to figure out how to get kwh and cost from displayROI() */
+  ReactDOM.render(progress.calculate(), document.getElementById())
 }
 
 ReactDOM.render(<H1 />, document.getElementById('h1'));
 ReactDOM.render(<Header />, document.getElementById('head'));
-ReactDOM.render(<CostForm />, document.getElementById('form'));
+ReactDOM.render(<CostForm />, document.getElementById('costForm'));
 ReactDOM.render(<CurrentSystemH1 />, document.getElementById('currentSystemH1'));
 ReactDOM.render(<CurrentSystemDropdown />, document.getElementById('currentSystemSelect'));
 
