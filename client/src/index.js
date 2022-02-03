@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import './index.css';
 // import App from './App';
 import reportWebVitals from './reportWebVitals';
-import functionPlot from 'function-plot';
 
 const Header = () => {
   const myStyle = {
@@ -23,30 +22,27 @@ const H1 = () => {
 }
 
 const CurrentSystemH1 = () => {
-  return <h1>View Energy Efficiency For Our Current Systems</h1>
+  return <h1>View Energy Efficiency For Our Current Renewable Energy Systems</h1>
 }
 
-class KwhGenerated {
-  constructor(kwh) {
+// class PowerGenerated {
+//   constructor(kwh, kbtu) {
+//     this.kwh = kwh;
+//     this.kbtu = kbtu;
+//   }
+// }
+
+class Savings /* extends PowerGenerated */ {
+  constructor(kwh, kbtu, cost) {
     this.kwh = kwh;
-  }
-
-  print() {
-    return 'This project generates ' + this.kwh + ' kWh per month';
-  }
-}
-
-class Savings extends KwhGenerated {
-  constructor(kwh, cost) {
-    super(kwh);
+    this.kbtu = kbtu;
     this.cost = cost;
     this.months = 0;
     this.years = 0;
-    this.data = [];
   }
 
-  calculate() {
-    this.months = this.cost/(.1115 * this.kwh); /* cost constant subject to change */
+  calculateKWH() {
+    this.months = this.cost/(.0995 * this.kwh); /* 9.95 cents per kWh */
     this.months = Math.ceil(this.months);
 
     let remainder = this.months % 12;
@@ -67,16 +63,45 @@ class Savings extends KwhGenerated {
     
     return (
       <h4>
-        This project will take {this.years} years to ahieve a return,
+        This project will take {this.years} years to achieve a return,
         i.e. the year {targetYear}.
       </h4>
-    )
+    );
+  }
+
+  calculateKBTU() {
+    this.months = this.cost/(.0007 * (this.kbtu * 1000)); /* 0.07 cents per BTU */
+    this.months = Math.ceil(this.months);
+
+    let remainder = this.months % 12;
+    this.years = this.months / 12;
+
+    let targetYear = new Date().getFullYear() + this.years;
+    targetYear = Math.floor(targetYear);
+
+    if (remainder) {
+      this.years = Math.floor(this.years);
+      return (
+        <h4>
+          This project will take {this.years} years and {remainder} months
+          to achieve a return, i.e. the year {targetYear}.
+        </h4>
+      );
+    }
+
+    return (
+      <h4>
+        This project will take {this.years} years to achieve a return,
+        i.e. the year {targetYear}.
+      </h4>
+    );
   }
 }
 
-class Profits extends KwhGenerated {
-  constructor(kwh, years, cost) {
-    super(kwh);
+class Profits /* extends PowerGenerated */ {
+  constructor(kwh, kbtu, years, cost) {
+    this.kwh = kwh;
+    this.kbtu = kbtu;
     this.years = years;
     this.cost = cost;
     this.progress = 0;
@@ -84,7 +109,7 @@ class Profits extends KwhGenerated {
 
   calculate() {
     let yearKwh = this.kwh * 12;
-    this.progress = .1115 * (yearKwh * this.years);
+    this.progress = .0995 * (yearKwh * this.years);
     this.progress.toFixed(2);
 
     let result = this.progress - this.cost;
@@ -99,17 +124,17 @@ class Profits extends KwhGenerated {
     }
   }
 
-  calculateOld() {
-    let yearKwh = this.kwh * 12;
-    this.profit = .1115 * (yearKwh * this.years);
-    this.profit = this.profit.toFixed(2);
-    let targetYear = new Date().getFullYear() + this.years + this.roi;
+  // calculateOld() {
+  //   let yearKwh = this.kwh * 12;
+  //   this.profit = .0995 * (yearKwh * this.years);
+  //   this.profit = this.profit.toFixed(2);
+  //   let targetYear = new Date().getFullYear() + this.years + this.roi;
 
-    return <p>You will have saved ${this.profit} by the year {targetYear}.</p>
-  }
+  //   return <p>You will have saved ${this.profit} by the year {targetYear}.</p>
+  // }
 }
 
-function CostForm() {
+function KWHForm() {
   const [inputs, setInputs] = useState({});
 
   const handleChange = (event) => {
@@ -120,14 +145,14 @@ function CostForm() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    displayROI(inputs);
+    displayKwhROI(inputs);
   }
 
   return (
     <form onSubmit={handleSubmit}>
       <label>Enter kWh Saved Per Month:
         <input
-          type='text'
+          type='number'
           name='kwh'
           value={inputs.kwh || ''}
           onChange={handleChange}
@@ -136,7 +161,46 @@ function CostForm() {
       </label>
       <label>Enter Total Cost:
         <input
-          type='text'
+          type='number'
+          name='cost'
+          value={inputs.cost || ''}
+          onChange={handleChange}
+          required='required'
+        />
+      </label>
+      <input type='submit' value='Calculate'/>
+    </form>
+  );
+}
+
+function KBTUForm() {
+  const [inputs, setInputs] = useState({});
+
+  const handleChange = (event) => {
+    const name = event.target.name;
+    const value = event.target.value;
+    setInputs(values => ({...values, [name]: value}));
+  }
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    displayBtuROI(inputs);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>Enter kBTU Saved Per Month: 
+        <input
+          type='number'
+          name='kbtu'
+          value={inputs.kbtu || ''}
+          onChange={handleChange}
+          required='required'
+        />
+      </label>
+      <label>Enter Total Cost:
+        <input
+          type='number'
           name='cost'
           value={inputs.cost || ''}
           onChange={handleChange}
@@ -166,14 +230,15 @@ function YearlyProgressForm() {
     <form onSubmit={handleSubmit}>
       <label>Enter number of years:
         <input
-          type='text'
-          name='kwh'
+          type='number'
+          name='years'
           value={inputs.years || ''}
           onChange={handleChange}
           required='required'
         />
       </label>
       <input type='submit' value='Calculate'/>
+      <p><em>* This feature has not been implemented yet</em></p>
     </form>
   );
 }
@@ -212,10 +277,10 @@ function CurrentSystemDropdown() {
   )
 }
 
-function displayROI(inputs) {
-  const savings = new Savings(inputs.kwh, inputs.cost);
-  ReactDOM.render(savings.calculate(), document.getElementById('roi'));
-  ReactDOM.render(<YearlyProgressForm />, document.getElementById('progressForm'));
+function displayKwhROI(inputs) {
+  const savings = new Savings(inputs.kwh, 0, inputs.cost);
+  ReactDOM.render(savings.calculateKWH(), document.getElementById('kwhRoi'));
+  // ReactDOM.render(<YearlyProgressForm />, document.getElementById('kwhProgressForm'));
 
   // const profits5 = new Profits(inputs.kwh, 5, savings.years);
   // const profits20 = new Profits(inputs.kwh, 20, savings.years);
@@ -223,14 +288,22 @@ function displayROI(inputs) {
   // ReactDOM.render(profits20.calculate(), document.getElementById('profit20'));
 }
 
+function displayBtuROI(inputs) {
+  const savings = new Savings(0, inputs.kbtu, inputs.cost);
+  ReactDOM.render(savings.calculateKBTU(), document.getElementById('btuRoi'));
+  ReactDOM.render(<YearlyProgressForm />, document.getElementById('kbtuProgressForm'));
+}
+
 function displayYearlyProgress(inputs) {
-  const progress = new Profits(kwh, inputs.years, cost); /* trying to figure out how to get kwh and cost from displayROI() */
-  ReactDOM.render(progress.calculate(), document.getElementById())
+  // const progress = new Profits(kwh, inputs.years, cost); /* trying to figure out how to get kwh and cost from displayKwhROI() */
+  // ReactDOM.render(progress.calculate(), document.getElementById())
+  alert('Looks like someone did not read the disclaimer');
 }
 
 ReactDOM.render(<H1 />, document.getElementById('h1'));
 ReactDOM.render(<Header />, document.getElementById('head'));
-ReactDOM.render(<CostForm />, document.getElementById('costForm'));
+ReactDOM.render(<KWHForm />, document.getElementById('kwhForm'));
+ReactDOM.render(<KBTUForm />, document.getElementById('kbtuForm'));
 ReactDOM.render(<CurrentSystemH1 />, document.getElementById('currentSystemH1'));
 ReactDOM.render(<CurrentSystemDropdown />, document.getElementById('currentSystemSelect'));
 
