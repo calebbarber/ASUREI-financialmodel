@@ -278,7 +278,7 @@ function BuildingNameDropdown() {
     event.preventDefault();
     if (mySystem === 'default') {
       alert('Looks like someone did not read the disclaimer\n'
-            + 'And select is not even a real option');
+            + 'And select is not even a real building');
     } else {
       alert('Looks like someone did not read the disclaimer');
     }
@@ -287,7 +287,7 @@ function BuildingNameDropdown() {
   return (
     <form onSubmit={handleSubmit}>
       <select value={mySystem} onChange={handleChange}>
-        <option value='default'>Dynamically listed from database</option>
+        <option value='default'>Select</option>
         <option value='ABH'>Anne Belk</option>
         <option value='CW'>Chapel Wilson</option>
         <option value='KH'>Kathryn Harper</option>
@@ -302,6 +302,16 @@ function BuildingNameDropdown() {
 }
 
 function displayKwhROI(inputs) {
+  if (inputs.kwh < 0) {
+    alert('If this project is losing power is it really a good idea?');
+    return;
+  }
+
+  if (inputs.cost < 0) {
+    alert('I wish it worked like that but someone has to pay for this');
+    return;
+  }
+
   const savings = new Savings(inputs.kwh, 0, inputs.cost);
   savingsValues.kwh = inputs.kwh;
   savingsValues.cost = inputs.cost;
@@ -311,6 +321,16 @@ function displayKwhROI(inputs) {
 }
 
 function displayBtuROI(inputs) {
+  if (inputs.kbtu < 0) {
+    alert('If this project is losing energy is it really a good idea?');
+    return;
+  }
+
+  if (inputs.cost < 0) {
+    alert('I wish it worked like that but someone has to pay for this');
+    return;
+  }
+  
   const savings = new Savings(0, inputs.kbtu, inputs.cost);
   savingsValues.kbtu = inputs.kbtu;
   savingsValues.cost = inputs.cost;
