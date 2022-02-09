@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 // import App from './App';
 import reportWebVitals from './reportWebVitals';
+import Slider from 'react-input-slider';
 
 const Header = () => {
   const myStyle = {
@@ -21,16 +22,16 @@ const H1 = () => {
   return <h1>Energy Efficiency Project Return on Investment Calculator</h1>;
 }
 
-const CurrentSystemH1 = () => {
-  return <h1>View Energy Efficiency For Our Current Renewable Energy Systems</h1>
+const BuildingUsageH1 = () => {
+  return <h1>View Energy Efficiency Of Our Campus Buildings</h1>
 }
 
-// class PowerGenerated {
-//   constructor(kwh, kbtu) {
-//     this.kwh = kwh;
-//     this.kbtu = kbtu;
-//   }
-// }
+let savingsValues = {
+  kwh: 0,
+  kbtu: 0,
+  cost: 0,
+  years: 0
+};
 
 class Savings /* extends PowerGenerated */ {
   constructor(kwh, kbtu, cost) {
@@ -42,7 +43,7 @@ class Savings /* extends PowerGenerated */ {
   }
 
   calculateKWH() {
-    this.months = this.cost/(.0995 * this.kwh); /* 9.95 cents per kWh */
+    this.months = this.cost/(.091 * this.kwh); /* 9.95 cents per kWh */
     this.months = Math.ceil(this.months);
 
     let remainder = this.months % 12;
@@ -98,7 +99,7 @@ class Savings /* extends PowerGenerated */ {
   }
 }
 
-class Profits /* extends PowerGenerated */ {
+class Profits {
   constructor(kwh, kbtu, years, cost) {
     this.kwh = kwh;
     this.kbtu = kbtu;
@@ -107,31 +108,55 @@ class Profits /* extends PowerGenerated */ {
     this.progress = 0;
   }
 
-  calculate() {
+  calculateKWH() {
     let yearKwh = this.kwh * 12;
-    this.progress = .0995 * (yearKwh * this.years);
-    this.progress.toFixed(2);
+    this.progress = .091 * (yearKwh * this.years);
+    this.progress = this.progress.toFixed(2);
+
+    let diff = this.cost - this.progress;
+    diff = diff.toFixed(2);
 
     let result = this.progress - this.cost;
     if (result < 0) { /* ROI not yet achieved */
-      let diff = this.cost - this.progress;
-      return <p>
-        This project has saved ${this.progress} after {this.years} years\n
-        This project will need to save ${diff} to acheive a Return
-      </p>
+      return <h4>
+        This project has saved ${this.progress} after {this.years} years<br></br>
+        This project will need to save ${diff} to acheive a return
+      </h4>
     } else { /* ROI acheived */
-      return <p>This project has saved ${this.progress} after {this.years} years</p>
+      diff *= -1;
+      diff = diff.toFixed(2);
+      return <h4>
+        This project has saved ${this.progress} after {this.years} years<br></br>
+        That is ${diff} over the initial cost
+      </h4>
     }
   }
 
-  // calculateOld() {
-  //   let yearKwh = this.kwh * 12;
-  //   this.profit = .0995 * (yearKwh * this.years);
-  //   this.profit = this.profit.toFixed(2);
-  //   let targetYear = new Date().getFullYear() + this.years + this.roi;
+  calculateKBTU() {
+    let yearKbtu = this.kbtu * 12;
+    let yearBtu = yearKbtu * 1000;
 
-  //   return <p>You will have saved ${this.profit} by the year {targetYear}.</p>
-  // }
+    this.progress = .0007 * (yearBtu * this.years);
+    this.progress = this.progress.toFixed(2);
+
+    let diff = this.cost - this.progress;
+    diff = diff.toFixed(2);
+
+    let result = this.progress - this.cost;
+    if (result < 0) { /* ROI not yet achieved */
+      return <h4>
+        This project has saved ${this.progress} after {this.years} years<br></br>
+        This project will need to save ${diff} to acheive a return
+      </h4>
+    } else { /* ROI acheived */
+      diff *= -1;
+      diff = diff.toFixed(2);
+      return <h4>
+        This project has saved ${this.progress} after {this.years} years<br></br>
+        That is ${diff} over the initial cost
+      </h4>
+    }
+  }
 }
 
 function KWHForm() {
@@ -223,7 +248,7 @@ function YearlyProgressForm() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    displayYearlyProgress(inputs);
+    DisplayYearlyProgress(inputs);
   }
 
   return (
@@ -238,12 +263,11 @@ function YearlyProgressForm() {
         />
       </label>
       <input type='submit' value='Calculate'/>
-      <p><em>* This feature has not been implemented yet</em></p>
     </form>
   );
 }
 
-function CurrentSystemDropdown() {
+function BuildingNameDropdown() {
   const [mySystem, setMySystem] = useState('default');
 
   const handleChange = (event) => {
@@ -263,13 +287,13 @@ function CurrentSystemDropdown() {
   return (
     <form onSubmit={handleSubmit}>
       <select value={mySystem} onChange={handleChange}>
-        <option value='default'>Select</option>
-        <option value='wind'>Wind Turbine</option>
-        <option value='legends'>Legends PV</option>
-        <option value='library'>Library Circle PV</option>
-        <option value='mtnarray'>Mountain Array PV</option>
-        <option value='plemmons'>Plemmons Student Union ST</option>
-        <option value='varsity'>Varsity Gym ST</option>
+        <option value='default'>Dynamically listed from database</option>
+        <option value='ABH'>Anne Belk</option>
+        <option value='CW'>Chapel Wilson</option>
+        <option value='KH'>Kathryn Harper</option>
+        <option value='COCK'>Peacock</option>
+        <option value='PSU'>Plemmons</option>
+        <option value='RSW'>Rankin Science West</option>
       </select>
       <input type='submit' value='Submit'/>
       <p><em>* This feature has not been implemented yet</em></p>
@@ -279,33 +303,40 @@ function CurrentSystemDropdown() {
 
 function displayKwhROI(inputs) {
   const savings = new Savings(inputs.kwh, 0, inputs.cost);
-  ReactDOM.render(savings.calculateKWH(), document.getElementById('kwhRoi'));
-  // ReactDOM.render(<YearlyProgressForm />, document.getElementById('kwhProgressForm'));
+  savingsValues.kwh = inputs.kwh;
+  savingsValues.cost = inputs.cost;
 
-  // const profits5 = new Profits(inputs.kwh, 5, savings.years);
-  // const profits20 = new Profits(inputs.kwh, 20, savings.years);
-  // ReactDOM.render(profits5.calculate(), document.getElementById('profit5'));
-  // ReactDOM.render(profits20.calculate(), document.getElementById('profit20'));
+  ReactDOM.render(savings.calculateKWH(), document.getElementById('kwhRoi'));
+  ReactDOM.render(<YearlyProgressForm />, document.getElementById('kwhProgressForm'));
 }
 
 function displayBtuROI(inputs) {
   const savings = new Savings(0, inputs.kbtu, inputs.cost);
+  savingsValues.kbtu = inputs.kbtu;
+  savingsValues.cost = inputs.cost;
+
   ReactDOM.render(savings.calculateKBTU(), document.getElementById('btuRoi'));
   ReactDOM.render(<YearlyProgressForm />, document.getElementById('kbtuProgressForm'));
 }
 
-function displayYearlyProgress(inputs) {
-  // const progress = new Profits(kwh, inputs.years, cost); /* trying to figure out how to get kwh and cost from displayKwhROI() */
-  // ReactDOM.render(progress.calculate(), document.getElementById())
-  alert('Looks like someone did not read the disclaimer');
+function DisplayYearlyProgress(inputs) {
+  if (savingsValues.kwh) {
+    const profits = new Profits(savingsValues.kwh, 0, inputs.years, savingsValues.cost);
+    ReactDOM.render(profits.calculateKWH(), document.getElementById('kwhProgress'));
+  }
+
+  else if (savingsValues.kbtu) {
+    const profits = new Profits(0, savingsValues.kbtu, inputs.years, savingsValues.cost);
+    ReactDOM.render(profits.calculateKBTU(), document.getElementById('btuProgress'));
+  }
 }
 
 ReactDOM.render(<H1 />, document.getElementById('h1'));
 ReactDOM.render(<Header />, document.getElementById('head'));
 ReactDOM.render(<KWHForm />, document.getElementById('kwhForm'));
 ReactDOM.render(<KBTUForm />, document.getElementById('kbtuForm'));
-ReactDOM.render(<CurrentSystemH1 />, document.getElementById('currentSystemH1'));
-ReactDOM.render(<CurrentSystemDropdown />, document.getElementById('currentSystemSelect'));
+ReactDOM.render(<BuildingUsageH1 />, document.getElementById('buildingUsageH1'));
+ReactDOM.render(<BuildingNameDropdown />, document.getElementById('BuildingNameSelect'));
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
