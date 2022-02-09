@@ -8,6 +8,6 @@ This financial model's intended purpose is to assist Project Management (PM), in
 - View progress on return after a given number of years
 
 ## Usage
-![Start Page][https://github.com/calebbarber/asurei-financialmodel/blob/e874afc2e112babef03b17baadd4f4a82fd702ad/client/public/readme_images/progress_prompt.png]
+![Start Page](public/readme_images/start.png)
 This model accepts two types of inputs, monthly kWh and kBTU generation. The user is prompted to input the monthly kWh or kBTU generation as two sperate forms. Upon submitting the values, a projected timetable of return on investment will appear below.
-![Yearly Progress Prompt][https://github.com/calebbarber/asurei-financialmodel/blob/e874afc2e112babef03b17baadd4f4a82fd702ad/client/public/readme_images/progress_prompt.png]
+![Yearly Progress Prompt](public/readme_images/progress_prompt.png)
