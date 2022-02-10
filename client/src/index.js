@@ -3,11 +3,10 @@ import ReactDOM from 'react-dom';
 import './index.css';
 // import App from './App';
 import reportWebVitals from './reportWebVitals';
-import Slider from 'react-input-slider';
 
 const Header = () => {
   const myStyle = {
-    height: "150px",
+    height: "145px",
     marginLeft: "20px"
   };
 
@@ -99,7 +98,7 @@ class Savings /* extends PowerGenerated */ {
   }
 }
 
-class Profits {
+class Progress {
   constructor(kwh, kbtu, years, cost) {
     this.kwh = kwh;
     this.kbtu = kbtu;
@@ -237,7 +236,7 @@ function KBTUForm() {
   );
 }
 
-function YearlyProgressForm() {
+function YearlyProgresForm() {
   const [inputs, setInputs] = useState({});
 
   const handleChange = (event) => {
@@ -248,7 +247,7 @@ function YearlyProgressForm() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    DisplayYearlyProgress(inputs);
+    DisplayYearlyProgres(inputs);
   }
 
   return (
@@ -317,7 +316,7 @@ function displayKwhROI(inputs) {
   savingsValues.cost = inputs.cost;
 
   ReactDOM.render(savings.calculateKWH(), document.getElementById('kwhRoi'));
-  ReactDOM.render(<YearlyProgressForm />, document.getElementById('kwhProgressForm'));
+  ReactDOM.render(<YearlyProgresForm />, document.getElementById('kwhProgressForm'));
 }
 
 function displayBtuROI(inputs) {
@@ -336,18 +335,26 @@ function displayBtuROI(inputs) {
   savingsValues.cost = inputs.cost;
 
   ReactDOM.render(savings.calculateKBTU(), document.getElementById('btuRoi'));
-  ReactDOM.render(<YearlyProgressForm />, document.getElementById('kbtuProgressForm'));
+  ReactDOM.render(<YearlyProgresForm />, document.getElementById('kbtuProgressForm'));
 }
 
-function DisplayYearlyProgress(inputs) {
+function DisplayYearlyProgres(inputs) {
   if (savingsValues.kwh) {
-    const profits = new Profits(savingsValues.kwh, 0, inputs.years, savingsValues.cost);
-    ReactDOM.render(profits.calculateKWH(), document.getElementById('kwhProgress'));
+    const progress = new Progress(savingsValues.kwh, 0, inputs.years, savingsValues.cost);
+    ReactDOM.render(progress.calculateKWH(), document.getElementById('kwhProgress'));
+
+    savingsValues.kwh = 0;
   }
 
   else if (savingsValues.kbtu) {
-    const profits = new Profits(0, savingsValues.kbtu, inputs.years, savingsValues.cost);
-    ReactDOM.render(profits.calculateKBTU(), document.getElementById('btuProgress'));
+    const progress = new Progress(0, savingsValues.kbtu, inputs.years, savingsValues.cost);
+    ReactDOM.render(progress.calculateKBTU(), document.getElementById('btuProgress'));
+
+    savingsValues.kbtu = 0;
+  }
+
+  else {
+    alert('What kind of data is this?');
   }
 }
 
