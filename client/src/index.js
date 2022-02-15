@@ -29,7 +29,9 @@ let savingsValues = {
   kwh: 0,
   kbtu: 0,
   cost: 0,
-  years: 0
+  years: 0,
+  kwhOld: 0,
+  kbtuOld: 0
 };
 
 class Savings /* extends PowerGenerated */ {
@@ -98,6 +100,10 @@ class Savings /* extends PowerGenerated */ {
   }
 }
 
+function addCommas(n) {
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 class Progress {
   constructor(kwh, kbtu, years, cost) {
     this.kwh = kwh;
@@ -111,22 +117,34 @@ class Progress {
     let yearKwh = this.kwh * 12;
     this.progress = .091 * (yearKwh * this.years);
     this.progress = this.progress.toFixed(2);
+    let progressDisplay = addCommas(this.progress);
 
     let diff = this.cost - this.progress;
     diff = diff.toFixed(2);
+    let diffDisplay = addCommas(diff);
 
     let result = this.progress - this.cost;
+    let yearString = 'years';
+    if (this.years == 1) {
+      yearString = 'year';
+    }
+
+    if (this.years == 0) {
+      return <h4>Why?</h4>
+    }
+
     if (result < 0) { /* ROI not yet achieved */
       return <h4>
-        This project has saved ${this.progress} after {this.years} years<br></br>
-        This project will need to save ${diff} to acheive a return
+        This project has saved ${progressDisplay} after {this.years} {yearString}<br></br>
+        This project will need to save ${diffDisplay} to acheive a return
       </h4>
     } else { /* ROI acheived */
       diff *= -1;
       diff = diff.toFixed(2);
+      diffDisplay = addCommas(diff);
       return <h4>
-        This project has saved ${this.progress} after {this.years} years<br></br>
-        That is ${diff} over the initial cost
+        This project has saved ${progressDisplay} after {this.years} {yearString}<br></br>
+        That is ${diffDisplay} over the initial cost
       </h4>
     }
   }
@@ -137,22 +155,34 @@ class Progress {
 
     this.progress = .0007 * (yearBtu * this.years);
     this.progress = this.progress.toFixed(2);
+    let progressDisplay = addCommas(this.progress);
 
     let diff = this.cost - this.progress;
     diff = diff.toFixed(2);
+    let diffDisplay = addCommas(diff);
 
     let result = this.progress - this.cost;
+    let yearString = 'years';
+    if (this.years == 1) {
+      yearString = 'year';
+    }
+
+    if (this.years == 0) {
+      return <h4>Why?</h4>
+    }
+
     if (result < 0) { /* ROI not yet achieved */
       return <h4>
-        This project has saved ${this.progress} after {this.years} years<br></br>
-        This project will need to save ${diff} to acheive a return
+        This project has saved ${progressDisplay} after {this.years} {yearString}<br></br>
+        This project will need to save ${diffDisplay} to acheive a return
       </h4>
     } else { /* ROI acheived */
       diff *= -1;
       diff = diff.toFixed(2);
+      diffDisplay = addCommas(diff);
       return <h4>
-        This project has saved ${this.progress} after {this.years} years<br></br>
-        That is ${diff} over the initial cost
+        This project has saved ${progressDisplay} after {this.years} {yearString}<br></br>
+        That is ${diffDisplay} over the initial cost
       </h4>
     }
   }
@@ -236,7 +266,7 @@ function KBTUForm() {
   );
 }
 
-function YearlyProgresForm() {
+function YearlyKWHProgresForm() {
   const [inputs, setInputs] = useState({});
 
   const handleChange = (event) => {
@@ -247,7 +277,37 @@ function YearlyProgresForm() {
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    DisplayYearlyProgres(inputs);
+    DisplayYearlyKWHProgres(inputs);
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label>Enter number of years:
+        <input
+          type='number'
+          name='years'
+          value={inputs.years || ''}
+          onChange={handleChange}
+          required='required'
+        />
+      </label>
+      <input type='submit' value='Calculate'/>
+    </form>
+  );
+}
+
+function YearlyBTUProgresForm() {
+  const [inputs, setInputs] = useState({});
+
+  const handleChange = (event) => {
+    const name = event.target.name;
+    const value = event.target.value;
+    setInputs(values => ({...values, [name]: value}));
+  }
+
+  const handleSubmit = (event) => {
+    event.preventDefault();
+    DisplayYearlyBTUProgress(inputs);
   }
 
   return (
@@ -316,7 +376,7 @@ function displayKwhROI(inputs) {
   savingsValues.cost = inputs.cost;
 
   ReactDOM.render(savings.calculateKWH(), document.getElementById('kwhRoi'));
-  ReactDOM.render(<YearlyProgresForm />, document.getElementById('kwhProgressForm'));
+  ReactDOM.render(<YearlyKWHProgresForm />, document.getElementById('kwhProgressForm'));
 }
 
 function displayBtuROI(inputs) {
@@ -335,27 +395,17 @@ function displayBtuROI(inputs) {
   savingsValues.cost = inputs.cost;
 
   ReactDOM.render(savings.calculateKBTU(), document.getElementById('btuRoi'));
-  ReactDOM.render(<YearlyProgresForm />, document.getElementById('kbtuProgressForm'));
+  ReactDOM.render(<YearlyBTUProgresForm />, document.getElementById('kbtuProgressForm'));
 }
 
-function DisplayYearlyProgres(inputs) {
-  if (savingsValues.kwh) {
-    const progress = new Progress(savingsValues.kwh, 0, inputs.years, savingsValues.cost);
-    ReactDOM.render(progress.calculateKWH(), document.getElementById('kwhProgress'));
+function DisplayYearlyKWHProgres(inputs) {
+  const progress = new Progress(savingsValues.kwh, 0, inputs.years, savingsValues.cost);
+  ReactDOM.render(progress.calculateKWH(), document.getElementById('kwhProgress'));
+}
 
-    savingsValues.kwh = 0;
-  }
-
-  else if (savingsValues.kbtu) {
-    const progress = new Progress(0, savingsValues.kbtu, inputs.years, savingsValues.cost);
-    ReactDOM.render(progress.calculateKBTU(), document.getElementById('btuProgress'));
-
-    savingsValues.kbtu = 0;
-  }
-
-  else {
-    alert('What kind of data is this?');
-  }
+function DisplayYearlyBTUProgress(inputs) {
+  const progress = new Progress(0, savingsValues.kbtu, inputs.years, savingsValues.cost);
+  ReactDOM.render(progress.calculateKBTU(), document.getElementById('btuProgress'));
 }
 
 ReactDOM.render(<H1 />, document.getElementById('h1'));

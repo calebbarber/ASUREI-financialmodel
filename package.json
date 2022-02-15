@@ -10,7 +10,7 @@
     "redux-thunk": "^2.4.1"
   },
   "name": "asurei-financialmodel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "index.js",
   "scripts": {
     "start": "node server/index.js",
