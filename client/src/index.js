@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 // import App from './App';
 import reportWebVitals from './reportWebVitals';
+import functionPlot from 'function-plot';
 
 const Header = () => {
   const myStyle = {
@@ -29,25 +30,32 @@ let savingsValues = {
   kwh: 0,
   kbtu: 0,
   cost: 0,
+  freq: 'monthly',
   years: 0,
   kwhOld: 0,
   kbtuOld: 0
 };
 
 class Savings /* extends PowerGenerated */ {
-  constructor(kwh, kbtu, cost) {
+  constructor(kwh, kbtu, cost, freq) {
     this.kwh = kwh;
     this.kbtu = kbtu;
     this.cost = cost;
+    this.freq = freq;
     this.months = 0;
     this.years = 0;
   }
 
   calculateKWH() {
-    this.months = this.cost/(.091 * this.kwh); /* 9.95 cents per kWh */
+    let remainder = 0;
+    if (this.freq === 'yearly') {
+      this.kwh /= 12;
+    }
+
+    this.months = this.cost/(.091 * this.kwh); /* 9.1 cents per kWh */
     this.months = Math.ceil(this.months);
 
-    let remainder = this.months % 12;
+    remainder = this.months % 12;
     this.years = this.months / 12;
     
     let targetYear = new Date().getFullYear() + this.years;
@@ -72,6 +80,10 @@ class Savings /* extends PowerGenerated */ {
   }
 
   calculateKBTU() {
+    if (this.freq === 'yearly') {
+      this.kwh /= 12;
+    }
+
     this.months = this.cost/(.0007 * (this.kbtu * 1000)); /* 0.07 cents per BTU */
     this.months = Math.ceil(this.months);
 
@@ -97,6 +109,29 @@ class Savings /* extends PowerGenerated */ {
         i.e. the year {targetYear}.
       </h4>
     );
+  }
+
+  plotGraph() {
+    let contentsBounds = document.body.getBoundingClientRect();
+    let width = 800;
+    let height = 500;
+    let ratio = contentsBounds.width / width;
+    
+    width *= ratio;
+    height *= ratio;
+
+    functionPlot({
+      target: '#root',
+      width,
+      height,
+      xAxis: { domain: [0, this.years+5]},
+      yAxis: { domain: [0, this.cost+10000]},
+      data: [
+        {
+          fn: ""
+        }
+      ]
+    })
   }
 }
 
@@ -190,26 +225,37 @@ class Progress {
 
 function KWHForm() {
   const [inputs, setInputs] = useState({});
+  const [freq, setFreq] = useState('monthly');
 
-  const handleChange = (event) => {
+  const handleInputChange = (event) => {
     const name = event.target.name;
     const value = event.target.value;
     setInputs(values => ({...values, [name]: value}));
   }
 
+  const handleFreqChange = (event) => {
+    setFreq(event.target.value);
+  }
+
   const handleSubmit = (event) => {
     event.preventDefault();
-    displayKwhROI(inputs);
+    displayKwhROI(inputs, freq);
   }
 
   return (
     <form onSubmit={handleSubmit}>
-      <label>Enter kWh Saved Per Month:
+      <label>Enter kWh Saved Per 
+        <select value={freq} onChange={handleFreqChange}>
+          <option value='monthly'>Month</option>
+          <option value='yearly'>Year</option>
+        </select>
+      </label>
+      <label>:
         <input
           type='number'
           name='kwh'
           value={inputs.kwh || ''}
-          onChange={handleChange}
+          onChange={handleInputChange}
           required='required'
         />
       </label>
@@ -218,7 +264,7 @@ function KWHForm() {
           type='number'
           name='cost'
           value={inputs.cost || ''}
-          onChange={handleChange}
+          onChange={handleInputChange}
           required='required'
         />
       </label>
@@ -229,26 +275,37 @@ function KWHForm() {
 
 function KBTUForm() {
   const [inputs, setInputs] = useState({});
+  const [freq, setFreq] = useState('monthly');
 
-  const handleChange = (event) => {
+  const handleInputChange = (event) => {
     const name = event.target.name;
     const value = event.target.value;
     setInputs(values => ({...values, [name]: value}));
   }
 
+  const handleFreqChange = (event) => {
+    setFreq(event.target.value);
+  }
+
   const handleSubmit = (event) => {
     event.preventDefault();
-    displayBtuROI(inputs);
+    displayBtuROI(inputs, freq);
   }
 
   return (
     <form onSubmit={handleSubmit}>
-      <label>Enter kBTU Saved Per Month: 
+      <label>Enter number of KBTU per 
+      <select value={freq} onChange={handleFreqChange}>
+          <option value='monthly'>Month</option>
+          <option value='yearly'>Year</option>
+        </select>
+      </label>
+      <label>: 
         <input
           type='number'
           name='kbtu'
           value={inputs.kbtu || ''}
-          onChange={handleChange}
+          onChange={handleInputChange}
           required='required'
         />
       </label>
@@ -257,7 +314,7 @@ function KBTUForm() {
           type='number'
           name='cost'
           value={inputs.cost || ''}
-          onChange={handleChange}
+          onChange={handleInputChange}
           required='required'
         />
       </label>
@@ -360,7 +417,7 @@ function BuildingNameDropdown() {
   )
 }
 
-function displayKwhROI(inputs) {
+function displayKwhROI(inputs, freq) {
   if (inputs.kwh < 0) {
     alert('If this project is losing power is it really a good idea?');
     return;
@@ -371,15 +428,16 @@ function displayKwhROI(inputs) {
     return;
   }
 
-  const savings = new Savings(inputs.kwh, 0, inputs.cost);
+  const savings = new Savings(inputs.kwh, 0, inputs.cost, freq);
   savingsValues.kwh = inputs.kwh;
   savingsValues.cost = inputs.cost;
+  savingsValues.freq = inputs.freq;
 
   ReactDOM.render(savings.calculateKWH(), document.getElementById('kwhRoi'));
   ReactDOM.render(<YearlyKWHProgresForm />, document.getElementById('kwhProgressForm'));
 }
 
-function displayBtuROI(inputs) {
+function displayBtuROI(inputs, freq) {
   if (inputs.kbtu < 0) {
     alert('If this project is losing energy is it really a good idea?');
     return;
@@ -390,7 +448,7 @@ function displayBtuROI(inputs) {
     return;
   }
   
-  const savings = new Savings(0, inputs.kbtu, inputs.cost);
+  const savings = new Savings(0, inputs.kbtu, inputs.cost, freq);
   savingsValues.kbtu = inputs.kbtu;
   savingsValues.cost = inputs.cost;
 
